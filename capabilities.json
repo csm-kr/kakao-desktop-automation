@@ -30,10 +30,11 @@
       "server_message_id": "unavailable",
       "recipient_read_receipt": "not_verified"
     },
-    "windows": "not implemented"
+    "windows": "not implemented",
+    "json_sender_adapter": "fake-backend contracts verified; live KakaoTalk single-call validation not performed"
   },
   "package_validation": {
-    "fixture_tests_passed": 12,
+    "fixture_tests_passed": 39,
     "skill_structure_valid": true,
     "foreground_fresh_bootstrap_and_reuse": "passed",
     "both_patches_apply_to_pin": "passed",
@@ -42,6 +43,12 @@
     "private_artifacts_included": false,
     "generic_probe_window_lookup": "AXWindows only; zero enumeration blocks confirmation",
     "background_policy_mock_tests_passed": 32,
-    "background_polling": "2s bound, 50ms read-only intervals; generic live e2e not verified"
+    "background_polling": "2s bound, 50ms read-only intervals; generic live e2e not verified",
+    "json_sender_fake_backend_tests_passed": 13,
+    "json_sender_native_message_id": "not synthesized; request-bound UI receipt only",
+    "json_sender_live_validation": "not_performed",
+    "scheduler_fake_backend_tests_passed": 13,
+    "scheduler_sender_subprocess_integration_tests_passed": 1,
+    "active_schedules_or_os_timers_installed": false
   }
 }

@@ -44,4 +44,6 @@ python3 <skill-directory>/scripts/bootstrap_kmsg.py --project <project-directory
 
 - 보고는 `확인된 새 발신 메시지`, `전송 전 중단`, `커밋 후 미확인`을 구분한다. 서버 message_id나 상대 읽음을 임의로 만들지 않는다.
 - 예약과 읽기는 별도 기능이다. 이 패키지는 타이머를 설치하지 않으며 읽을 방·기간·정보 기준을 임의로 확대하지 않는다.
+- 예약기/다른 프로그램에 연결하려면 [JSON sender](references/sender.md)를 읽는다. `scripts/kakao_sender.py`는 background 호출·요청 원장·독립 UI 확인을 묶은 adapter이며, 모의 계약 검사와 실제 카카오톡 검증을 구분한다. 서버 ID 대신 요청에 결합된 UI 확인 기록을 사용할 수 있다.
+- 일회/매일 예약을 관리하려면 [예약 CLI](references/scheduling.md)를 읽고 `scripts/kakao_schedule.py`를 사용한다. 기본은 dry-run이며 수신자·본문·일정과 실제 sender 검증 전에 활성화하지 않는다.
 - 앱 UI가 달라지면 먼저 actual AX 요소와 action을 읽는다. REA 같은 정적 도구는 보조 조사에 쓸 수 있지만, 메서드 이름이나 주소만으로 외부 발송 계약을 가정하지 않는다.

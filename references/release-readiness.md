@@ -19,9 +19,14 @@
 | Native probe | -O compile 및 도움말만 실행 | 통과, 앱 접근 없음 |
 | 실제 고정 소스 bootstrap | 새 checkout → foreground patch → release build 및 probe compile → 재사용 | 통과. `built` 다음 `reused`, CLI VERSION `1.260921.0` 확인 |
 | 고정 source patch 적용 | 깨끗한 같은 upstream에서 foreground/background 각각 단독 `git apply --check` | 두 variant 모두 통과 |
-| 공개 파일 검사 | 개인 식별자·토큰·사용자 절대 경로·로그/DB/바이너리 배제, 문서 링크 | 최종 16개 파일 검사 통과, 일치·누락 0개 |
+| 공개 파일 검사 | 개인 식별자·토큰·사용자 절대 경로·로그/DB/바이너리 배제, 문서 링크 | 게시 직전 tracked 파일과 새 소스를 검사 |
+| JSON sender | 가짜 probe/kmsg, UI 기록 대조, 재호출·중단·원장 변경·동시 실행 | 13개 검사 통과, 기존 12개와 합계 25개 |
+| 예약 CLI | 서울 시간·단일 claim·미확인 보류·UI 기록 대조·기존 DB upgrade | 13개 검사 통과 |
+| subprocess 통합 | 예약→adapter→가짜 kmsg/probe→UI 기록→중복 차단 | 1개 검사, 공개 패키지 합계 39개 |
 
 실제 bootstrap 검사에서 원본 저장소의 내부 문서 symlink를 일괄 거부하는 문제가 발견돼 수정했다. checkout 내부의 파일을 가리키는 symlink만 hash에 포함하고, 외부를 가리키는 symlink와 사용자 수정은 거부한다. fixture에도 이 경계를 추가했다.
+
+JSON sender는 독립 에이전트가 가짜 실행 파일로도 검수했다. state_dir 변경으로 원장을 우회하는 문제와 부모 중단 뒤 남은 자식에 다른 요청이 겹치는 문제를 재현해 수정했다. 고정 registry anchor·원장 lock·미완료 호출 보류를 넣었고, 서로 다른 설정 디렉터리가 같은 원장을 사용하는 동시성도 검사했다. 실제 앱/UI·추가 전송·OS 타이머 활성화는 이 검수에 포함하지 않았다. 공개 adapter의 한 번 호출 실기 검증은 여전히 남아 있다.
 
 최신 background patch의 release build와 정책 검사 32개는 별도 개발 작업에서 통과한 결과다. 입력 후 2초/50ms 읽기 polling과 매번의 상태 재검사, timeout·본문/identity 변경 중단을 포함한다. 이 코드는 controlled test의 별도 복구를 통합하려는 후속 개선이며 실제 단일 호출 end-to-end 검증을 대신하지 않는다. 이 패키지 bootstrap의 새 checkout 전체 빌드는 foreground variant로 실행했다. generic probe는 새로 일반화한 도구로 compile/도움말만 확인했다. 특히 background에서 AXWindows가 0이면 공개 probe는 차단되므로 private hint observer로 확인한 controlled 결과를 공개 probe의 성공으로 옮기지 않는다.
 

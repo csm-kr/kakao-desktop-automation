@@ -10,3 +10,7 @@ artifacts/
 *.sqlite3
 *.db
 *.jsonl
+.kakao-sender*
+.sender.lock
+*.intent.json
+*.receipt.json
