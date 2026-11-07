@@ -12,6 +12,7 @@ Codex 등 에이전트가 로그인된 macOS 카카오톡에서 **대상 확인 
 - 메시지 내용을 출력하지 않는 read-only AX probe와 전후 결과 비교 도구
 - 백그라운드/Windows 지원 상태와 검증 방법
 - SQLite 일회·매일 예약 CLI와 요청/확인 기록을 잇는 JSON sender
+- 지정한 방의 AX 텍스트와 키워드·링크 조건을 출처에 연결하는 로컬 선별 도구
 
 | 항목 | 검증 상태 |
 |---|---|
@@ -21,6 +22,7 @@ Codex 등 에이전트가 로그인된 macOS 카카오톡에서 **대상 확인 
 | 상대방 읽음·서버 message_id | 확인하지 않음 |
 | 예약·무인 운영 | 타이머 미포함. 새 조건과 실제 sender 검증 필요 |
 | JSON sender adapter | 요청 원장·background 호출·UI 확인 기록 연결. 가짜 backend로 검증, adapter 실기 미검증 |
+| 정보 수집·선별 | exact 방·노출된 AX 행·명시한 키워드/링크 조건. 가짜 캡처로 검증, 실제 방 수집 미검증 |
 
 실제 계정명, 대화 이름, 테스트 본문, 로그, 대화 DB, 바이너리는 포함하지 않는다. 이름과 본문은 실행할 때 사용자가 지정한다.
 
@@ -35,6 +37,8 @@ python3 scripts/bootstrap_kmsg.py --project /path/to/project
 ```
 
 출력 JSON에 나오는 `kmsg`와 `probe`가 로컬 실행 파일이다. 재실행하면 검증한 checkout/patch/바이너리를 재사용한다. 준비 단계는 실제 앱에 접근하지 않는다. 실제 전송은 [SKILL.md](SKILL.md)의 대상·초안·요청 기록 확인 후에만 실행한다.
+
+추가 `collector`는 [정보 수집·선별](references/insights.md)의 read-only 경로에서 사용한다. 원문은 로컬 비공개 파일로 저장하며 작성자·날짜·전체 이력을 보장하지 않는다.
 
 experimental 배경 경로는 `--variant background-experimental`을 붙여 별도 checkout으로 만든다. 먼저 `kmsg send '<exact-open-chat-title>' --background-safe --check-only`로 읽기 전용 준비 검사를 한다. 이 검사의 통과는 실제 전송이나 화면 변화 0회의 증거가 아니다. [플랫폼 조건](references/platforms.md)을 따른다.
 

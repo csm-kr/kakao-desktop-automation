@@ -54,6 +54,7 @@ def snapshot(checkout):
 def build(checkout, probe_source):
     command(["swift", "build", "-c", "release", "--package-path", str(checkout)])
     command(["swiftc", "-O", str(probe_source), "-o", str(checkout / ".build/release/kakao-probe")])
+    command(["swiftc", "-O", str(PACKAGE / "scripts/collect.swift"), "-o", str(checkout / ".build/release/kakao-collect")])
 
 
 def bootstrap(project, variant="foreground"):
@@ -75,7 +76,8 @@ def bootstrap(project, variant="foreground"):
     patch = PACKAGE / "patches" / VARIANTS[variant]
     probe_source = PACKAGE / "scripts/probe.swift"
     expected = {"upstream": UPSTREAM_URL, "commit": UPSTREAM_COMMIT, "variant": variant,
-                "patch_sha256": digest(patch), "probe_source_sha256": digest(probe_source)}
+                "patch_sha256": digest(patch), "probe_source_sha256": digest(probe_source),
+                "collector_source_sha256": digest(PACKAGE / "scripts/collect.swift")}
     # Local build locking is separate from send idempotency; bootstrap never sends.
     import fcntl
     with (tools / f"kmsg-{variant}.install.lock").open("a") as lock:
@@ -94,9 +96,13 @@ def bootstrap(project, variant="foreground"):
                 raise RuntimeError("existing source was changed; leave it untouched")
             binary = destination / ".build/release/kmsg"
             probe = destination / ".build/release/kakao-probe"
+            collector = destination / ".build/release/kakao-collect"
             if not binary.is_file() or not probe.is_file() or digest(binary) != previous.get("binary_sha256") or digest(probe) != previous.get("probe_sha256"):
                 raise RuntimeError("cached executable is missing or changed; use a fresh project directory")
-            return {"status": "reused", "variant": variant, "kmsg": str(binary), "probe": str(probe)}
+            if not collector.is_file() or digest(collector) != previous.get("collector_sha256"):
+                raise RuntimeError("cached collector executable is missing or changed; use a fresh project directory")
+            return {"status": "reused", "variant": variant, "kmsg": str(binary), "probe": str(probe),
+                    "collector": str(collector)}
         if receipt.exists():
             raise RuntimeError("orphaned install receipt exists; inspect it before retrying")
         temporary = Path(tempfile.mkdtemp(prefix=".kmsg-build-", dir=tools))
@@ -112,8 +118,9 @@ def bootstrap(project, variant="foreground"):
             build(temporary, probe_source)
             binary = temporary / ".build/release/kmsg"
             probe = temporary / ".build/release/kakao-probe"
+            collector = temporary / ".build/release/kakao-collect"
             record = {**expected, "source_tree_sha256": snapshot(temporary),
-                      "binary_sha256": digest(binary), "probe_sha256": digest(probe)}
+                      "binary_sha256": digest(binary), "probe_sha256": digest(probe), "collector_sha256": digest(collector)}
             # Reserve the receipt before exposing the final directory; failures leave no half install.
             with receipt.open("x") as file:
                 json.dump(record, file, indent=2)
@@ -126,7 +133,8 @@ def bootstrap(project, variant="foreground"):
                 raise
             return {"status": "built", "variant": variant,
                     "kmsg": str(destination / ".build/release/kmsg"),
-                    "probe": str(destination / ".build/release/kakao-probe")}
+                    "probe": str(destination / ".build/release/kakao-probe"),
+                    "collector": str(destination / ".build/release/kakao-collect")}
         finally:
             if not moved:
                 shutil.rmtree(temporary, ignore_errors=True)

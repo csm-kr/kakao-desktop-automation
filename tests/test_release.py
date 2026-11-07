@@ -48,6 +48,7 @@ class BootstrapTests(unittest.TestCase):
         (self.package / "scripts").mkdir()
         (self.package / "patches/kmsg-foreground.patch").write_text(git(self.origin, "diff") + "\n")
         (self.package / "scripts/probe.swift").write_text("fixture probe source\n")
+        (self.package / "scripts/collect.swift").write_text("fixture collector source\n")
         self.project = self.root / "project"
         self.builds = []
         self.patches = [patch.object(bootstrap, "UPSTREAM_URL", str(self.origin)),
@@ -64,7 +65,7 @@ class BootstrapTests(unittest.TestCase):
         self.builds.append(directory)
         binary_directory = directory / ".build/release"
         binary_directory.mkdir(parents=True)
-        for name in ["kmsg", "kakao-probe"]:
+        for name in ["kmsg", "kakao-probe", "kakao-collect"]:
             path = binary_directory / name
             path.write_text("fixture binary - never runs UI\n")
 
@@ -124,6 +125,13 @@ class BootstrapTests(unittest.TestCase):
         first = bootstrap.bootstrap(self.project)
         Path(first["kmsg"]).write_text("different binary")
         with self.assertRaisesRegex(RuntimeError, "executable is missing or changed"):
+            bootstrap.bootstrap(self.project)
+        self.assertEqual(len(self.builds), 1)
+
+    def test_changed_collector_is_not_reused(self):
+        first = bootstrap.bootstrap(self.project)
+        Path(first["collector"]).write_text("changed collector executable")
+        with self.assertRaisesRegex(RuntimeError, "collector executable is missing or changed"):
             bootstrap.bootstrap(self.project)
         self.assertEqual(len(self.builds), 1)
 

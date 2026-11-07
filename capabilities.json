@@ -31,10 +31,18 @@
       "recipient_read_receipt": "not_verified"
     },
     "windows": "not implemented",
-    "json_sender_adapter": "fake-backend contracts verified; live KakaoTalk single-call validation not performed"
+    "json_sender_adapter": "fake-backend contracts verified; live KakaoTalk single-call validation not performed",
+    "information_collection": {
+      "implementation": "exact exposed AX text-row tail and local literal keyword/link selection",
+      "live_room_validation": "not_performed",
+      "author_and_message_date": "not_inferred",
+      "full_history_and_date_range": "not_implemented",
+      "semantic_summary": "not_implemented",
+      "external_forwarding": "not_connected"
+    }
   },
   "package_validation": {
-    "fixture_tests_passed": 41,
+    "fixture_tests_passed": 51,
     "skill_structure_valid": true,
     "foreground_fresh_bootstrap_and_reuse": "passed",
     "both_patches_apply_to_pin": "passed",
@@ -51,6 +59,11 @@
     "scheduler_sender_subprocess_integration_tests_passed": 1,
     "active_schedules_or_os_timers_installed": false,
     "locked_session_native_probe": "live read-only guard validated; no app AX observation attempted",
-    "unlocked_session_after_guard_change": "not_live_retested"
+    "unlocked_session_after_guard_change": "not_live_retested",
+    "insights_fake_tests_passed": 9,
+    "current_three_helper_bootstrap_and_reuse": "passed; fixed-source background-experimental release build, probe and collector startup",
+    "collector_native_compile_and_help": "passed",
+    "collector_locked_session_guard": "live validated; no AX observation or room text returned",
+    "collector_unlocked_room_read": "not_performed"
   }
 }

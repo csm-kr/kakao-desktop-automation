@@ -68,6 +68,6 @@ sender가 없거나 설정이 유효하지 않으면 승인된 due job도 `block
 
 adapter 설정·기록의 형식과 background 창 노출 제약은 [sender 연결](sender.md)을 따른다. 요청 원장과 설정 디렉터리를 유지해야 하며 기존 state_dir 값을 바꿔 미확인 호출을 무시하지 않는다. 부모가 중단된 intent가 있으면 자식 종료와 실제 UI 결과를 대조할 때까지 다른 요청도 막는다.
 
-현재 스케줄러 검사는 13개이며 UI 확인 기록의 hash/요청/수신자/본문·관찰 일치와 기존 DB의 보존 upgrade를 포함한다. 별도 실제 subprocess 통합 검사는 예약기→JSON adapter→가짜 kmsg/probe→receipt 저장→중복 방지를 확인한다. 공개 패키지는 bootstrap/결과 비교 13개·sender 14개·예약기 13개·subprocess 통합 1개, 합계 41개 검사를 포함한다. 모두 fake backend 검사이며 실제 카카오톡 발송 성공 건수는 늘리지 않았다.
+현재 스케줄러 검사는 13개이며 UI 확인 기록의 hash/요청/수신자/본문·관찰 일치와 기존 DB의 보존 upgrade를 포함한다. 별도 실제 subprocess 통합 검사는 예약기→JSON adapter→가짜 kmsg/probe→receipt 저장→중복 방지를 확인한다. 전체 검사 수는 패키지 capabilities.json을 따른다. 예약기13개·sender14개와 subprocess 통합을 구분해 검증했다. 모두 fake backend 검사이며 실제 카카오톡 발송 성공 건수는 늘리지 않았다.
 
 `python3 -m unittest discover -s tests -p 'test_kakao_schedule.py' -v`는 임시 DB와 가짜 sender만 쓴다. 서울 시간 해석, 승인·sender 누락 시 보존, dry-run, 동시 두 프로세스의 단일 claim, 중단·시간 초과·불명 응답의 재시도 차단, 매일 예약의 다음 시각을 확인한다. **모의 검증 통과는 카카오톡 전송 성공을 의미하지 않는다.**
