@@ -1,0 +1,112 @@
+diff --git a/Sources/kmsg/Commands/SendCommand.swift b/Sources/kmsg/Commands/SendCommand.swift
+index 347a167..a2e8d2c 100644
+--- a/Sources/kmsg/Commands/SendCommand.swift
++++ b/Sources/kmsg/Commands/SendCommand.swift
+@@ -106,7 +106,7 @@ struct SendCommand: ParsableCommand {
+             return
+         }
+ 
+-        guard AccessibilityPermission.ensureGranted() else {
++        guard AccessibilityPermission.ensureGranted(autoPrompt: false, openSettingsOnFailure: false) else {
+             AccessibilityPermission.printInstructions()
+             throw ExitCode.failure
+         }
+@@ -114,47 +114,13 @@ struct SendCommand: ParsableCommand {
+         let runner = AXActionRunner(traceEnabled: traceAX)
+ 
+         prepareCacheIfNeeded(runner: runner)
+-        let kakao = try AuthBootstrap.requireAuthenticated(traceAX: traceAX)
+-        let chatWindowResolver = ChatWindowResolver(
+-            kakao: kakao,
+-            runner: runner,
+-            useCache: !noCache,
+-            deepRecoveryEnabled: deepRecovery
+-        )
+-
+-        do {
+-            runner.log("window strategy: focusedWindow -> mainWindow -> windows.first")
+-            let resolution: ChatWindowResolution
+-            if let chatID {
+-                print("Looking for chat with \(targetDescription)...")
+-                resolution = try chatWindowResolver.resolve(chatID: chatID)
+-                if resolution.openedTransiently {
+-                    print("No existing chat window. Opening via chat list or search...")
+-                } else {
+-                    print("Found existing chat window.")
+-                }
+-            } else {
+-                let recipient = recipient ?? ""
+-                print("Looking for chat with \(targetDescription)...")
+-                resolution = try chatWindowResolver.resolve(query: recipient)
+-                if resolution.openedTransiently {
+-                    print("No existing chat window. Opening via search...")
+-                } else {
+-                    print("Found existing chat window.")
+-                }
+-            }
+-
+-            try sendMessageToWindow(resolution.window, kakao: kakao, runner: runner)
+-            closeWindowsIfNeeded(
+-                resolution: resolution,
+-                kakao: kakao,
+-                resolver: chatWindowResolver,
+-                runner: runner
+-            )
+-        } catch {
+-            print("Failed to send message: \(error)")
+-            throw ExitCode.failure
+-        }
++        let kakao = try KakaoTalkApp()
++        // Project adapter: existing authenticated, exact-title window only. No auth/credential fallback.
++        guard let exactRecipient = recipient else { throw ValidationError("Project adapter requires exact recipient name") }
++        let exactWindows = kakao.windows.filter { $0.title == exactRecipient }
++        guard exactWindows.count == 1 else { throw ValidationError("Project adapter requires one exact-title open window") }
++        try sendMessageToWindow(exactWindows[0], kakao: kakao, runner: runner)
++        return
+     }
+ 
+     private func supportsAction(_ action: String, on element: UIElement) -> Bool {
+@@ -264,14 +230,10 @@ struct SendCommand: ParsableCommand {
+         Thread.sleep(forTimeInterval: 0.1)
+ 
+         guard let input = resolveMessageInputField(chatWindow: window, kakao: kakao, runner: runner) else {
+-            let forcedTyped = forceTypeIntoChatWindow(chatWindow: window, kakao: kakao, runner: runner)
+-            guard forcedTyped else {
+-                throw KakaoTalkError.actionFailed("[\(SendFailureCode.forcedTypingFailed.rawValue)] Message input field not found and forced typing fallback failed")
+-            }
+-            print("✓ Message sent to \(targetDescription) (forced typing fallback)")
+-            return
++            throw ValidationError("Project adapter: no verified message composer; no forced typing")
+         }
+ 
++        guard input.value as? String == "" else { throw ValidationError("Project adapter: existing draft was not empty") }
+         guard runner.focusWithVerification(input, label: "message input", attempts: 1) else {
+             throw KakaoTalkError.actionFailed("[\(SendFailureCode.focusFail.rawValue)] Could not focus message input")
+         }
+@@ -283,24 +245,14 @@ struct SendCommand: ParsableCommand {
+             throw KakaoTalkError.actionFailed("[\(SendFailureCode.inputNotReflected.rawValue)] Message input was not reflected")
+         }
+ 
+-        var sendSucceeded = runner.pressEnterWithVerification(
++        let sendSucceeded = runner.pressEnterWithVerification(
+             on: input,
+             label: "message input",
+             attempts: 1,
+             reflectionTimeout: 0.24,
+             retryDelay: 0.06
+         )
+-        if !sendSucceeded {
+-            runner.log("message input: quick retry after enter miss")
+-            _ = runner.focusWithVerification(input, label: "message input retry", attempts: 1)
+-            sendSucceeded = runner.pressEnterWithVerification(
+-                on: input,
+-                label: "message input retry",
+-                attempts: 1,
+-                reflectionTimeout: 0.34,
+-                retryDelay: 0.06
+-            )
+-        }
++        // Project adapter: one commit attempt only; caller verifies new outgoing bubble.
+         guard sendSucceeded else {
+             invalidateCachedSlots([.messageInput], runner: runner)
+             throw KakaoTalkError.actionFailed("[\(SendFailureCode.enterNotEffective.rawValue)] Enter key had no visible effect")

@@ -1,0 +1,47 @@
+{
+  "package": "kakao-desktop-automation",
+  "upstream": {
+    "repository": "https://github.com/channprj/kmsg",
+    "commit": "54cbff790b409214735ef365a621d791034fe500"
+  },
+  "variants": {
+    "foreground": {
+      "patch": "patches/kmsg-foreground.patch",
+      "sha256": "22cd01143348b760355709674c45dcb638ab2ab76e83a215d8198367e1c847c0"
+    },
+    "background-experimental": {
+      "patch": "patches/kmsg-background-experimental.patch",
+      "sha256": "f774376b933c3637fb07e0876dcce2fa4145c29c26c1803d947ddea036c6d75d"
+    }
+  },
+  "verified_scope": {
+    "foreground": "two controlled personal-chat sends observed in UI on KakaoTalk 26.3",
+    "background": {
+      "controlled_send_count": 1,
+      "kakaotalk_version": "26.9.0",
+      "build": "2006",
+      "observed_insertions": 1,
+      "observed_commits": 1,
+      "method": "initial insertion followed by a separate retained-window recovery commit",
+      "observed_frontmost_transitions_insert_interval": 0,
+      "observed_frontmost_transitions_press_interval": 0,
+      "preparation_transitions_excluded": true,
+      "generic_single_call_sender_e2e": "not_verified",
+      "server_message_id": "unavailable",
+      "recipient_read_receipt": "not_verified"
+    },
+    "windows": "not implemented"
+  },
+  "package_validation": {
+    "fixture_tests_passed": 12,
+    "skill_structure_valid": true,
+    "foreground_fresh_bootstrap_and_reuse": "passed",
+    "both_patches_apply_to_pin": "passed",
+    "generic_probe_native_compile_and_help": "passed",
+    "generic_probe_live_delivery_verification": "not_performed",
+    "private_artifacts_included": false,
+    "generic_probe_window_lookup": "AXWindows only; zero enumeration blocks confirmation",
+    "background_policy_mock_tests_passed": 32,
+    "background_polling": "2s bound, 50ms read-only intervals; generic live e2e not verified"
+  }
+}

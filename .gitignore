@@ -1,0 +1,12 @@
+.tools/
+__pycache__/
+*.pyc
+before.json
+after.json
+.local/
+var/
+artifacts/
+*.log
+*.sqlite3
+*.db
+*.jsonl
