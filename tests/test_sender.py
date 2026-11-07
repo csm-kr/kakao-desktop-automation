@@ -38,10 +38,11 @@ name=pathlib.Path(sys.argv[0]).name
 if name=='probe':
     title,message=sys.argv[1:]
     delivered=(root/'committed').exists()
-    print(json.dumps({{'ready':case!='probe_unavailable','exact_window_count':1,
+    print(json.dumps({{'ready':case not in ['probe_unavailable','locked'],'exact_window_count':1,
       'pid':456 if case=='pid_changed' and delivered else 123,'target_title':title,
       'message_sha256':hashlib.sha256(message.encode()).hexdigest(),'scan_limit':80,
-      'composer_empty':case!='draft_present','matching_outgoing_count':int(delivered)}}))
+      'composer_empty':case!='draft_present','matching_outgoing_count':int(delivered),
+      'session_flags':{{'CGSSessionScreenIsLocked':True}} if case=='locked' else {{}}}}))
 else:
     with (root/'calls.jsonl').open('a') as stream: stream.write(json.dumps(sys.argv[1:])+'\\n')
     if case=='slow': time.sleep(.35)
@@ -101,6 +102,13 @@ else:
                 request = {**self.request, "request_id": case}
                 self.assertEqual(self.deliver(request)["status"], "not_sent")
                 self.assertEqual(self.invocation_count(), 0)
+
+    def test_locked_session_stops_before_kmsg_with_a_specific_reason(self):
+        self.scenario_case("locked")
+        result = self.deliver()
+        self.assertEqual(result["status"], "not_sent")
+        self.assertEqual(result["reason"], "session_screen_locked")
+        self.assertEqual(self.invocation_count(), 0)
 
     def test_precommit_stop_and_owned_draft_do_not_trigger_retry(self):
         self.scenario_case("precommit_draft")

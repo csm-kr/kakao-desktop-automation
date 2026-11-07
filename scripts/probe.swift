@@ -62,10 +62,24 @@ let message = arguments[1]
 let limit = 80
 var output: [String: Any] = ["ready": false, "target_title": title, "scan_limit": limit,
     "message_sha256": SHA256.hash(data: Data(message.utf8)).map { String(format: "%02x", $0) }.joined(),
-    "transport": "macOS AX read-only", "foreground_changed_by_probe": false]
-if !AXIsProcessTrusted() {
+    "transport": "macOS AX read-only", "foreground_changed_by_probe": false,
+    "ax_observation_attempted": false]
+let session = CGSessionCopyCurrentDictionary() as? [String: Any] ?? [:]
+let flags = session.filter {
+    ["CGSSessionScreenIsLocked", "kCGSessionLoginDoneKey", "kCGSSessionOnConsoleKey"].contains($0.key)
+}
+output["session_flags"] = flags
+// In observed unlocked sessions the lock key was absent. Preserve that absence
+// rather than claiming an explicit false or an unlocked guarantee.
+if flags["CGSSessionScreenIsLocked"] as? Bool == true {
+    output["error"] = "session_screen_locked"
+} else if flags["kCGSessionLoginDoneKey"] as? Bool == false
+            || flags["kCGSSessionOnConsoleKey"] as? Bool == false {
+    output["error"] = "session_not_interactive"
+} else if !AXIsProcessTrusted() {
     output["error"] = "accessibility_permission_missing"
 } else if let app = NSRunningApplication.runningApplications(withBundleIdentifier: "com.kakao.KakaoTalkMac").first {
+    output["ax_observation_attempted"] = true
     let application = AXUIElementCreateApplication(app.processIdentifier)
     AXUIElementSetMessagingTimeout(application, 0.5)
     output["pid"] = app.processIdentifier

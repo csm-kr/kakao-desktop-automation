@@ -7,9 +7,25 @@ import sys
 from pathlib import Path
 
 
+def session_blocker(observation):
+    flags = observation.get("session_flags", {})
+    if not isinstance(flags, dict):
+        return "session_flags_invalid"
+    keys = ("CGSSessionScreenIsLocked", "kCGSessionLoginDoneKey", "kCGSSessionOnConsoleKey")
+    if any(key in flags and type(flags[key]) is not bool for key in keys):
+        return "session_flags_invalid"
+    if flags.get("CGSSessionScreenIsLocked") is True:
+        return "session_screen_locked"
+    if flags.get("kCGSessionLoginDoneKey") is False or flags.get("kCGSSessionOnConsoleKey") is False:
+        return "session_not_interactive"
+    return None
+
+
 def verify(before, after):
     reasons = []
     for label, observation in [("before", before), ("after", after)]:
+        if blocker := session_blocker(observation):
+            reasons.append(f"{label}_{blocker}")
         if observation.get("ready") is not True or type(observation.get("exact_window_count")) is not int or observation["exact_window_count"] != 1:
             reasons.append(f"{label}_window_or_probe_not_ready")
         if type(observation.get("pid")) is not int or observation["pid"] <= 0:

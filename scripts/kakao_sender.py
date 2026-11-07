@@ -12,7 +12,11 @@ import uuid
 from pathlib import Path
 
 from ui_receipt import binding, load_verified_receipt
-from verify_delivery import verify
+from verify_delivery import session_blocker, verify
+
+
+class ObservationUnavailable(ValueError):
+    pass
 
 
 def save(path, value, exclusive=False):
@@ -62,13 +66,18 @@ def observe(config, title, message):
     result = subprocess.run([config["probe"], title, message], text=True, capture_output=True,
                             timeout=3, check=False)
     observation = json.loads(result.stdout)
-    if result.returncode != 0 or not isinstance(observation, dict):
+    if result.returncode != 0 or not isinstance(observation, dict) or observation.get("ready") is not True:
+        if isinstance(observation, dict):
+            blocker = session_blocker(observation)
+            if blocker:
+                raise ObservationUnavailable(blocker)
         raise ValueError("read-only probe did not return a ready observation")
     return observation
 
 
 def baseline_ready(observation, title, digest):
-    return (observation.get("ready") is True and type(observation.get("exact_window_count")) is int
+    return (session_blocker(observation) is None
+            and observation.get("ready") is True and type(observation.get("exact_window_count")) is int
             and observation["exact_window_count"] == 1 and observation.get("composer_empty") is True
             and type(observation.get("pid")) is int and observation["pid"] > 0
             and observation.get("target_title") == title and observation.get("message_sha256") == digest
@@ -140,6 +149,8 @@ def deliver(config_path, request):
 
         try:
             before = observe(config, title, request["message"])
+        except ObservationUnavailable as exc:
+            return finish("not_sent", str(exc))
         except (OSError, ValueError, subprocess.TimeoutExpired):
             return finish("not_sent", "baseline_probe_unavailable")
         if not baseline_ready(before, title, expected["message_sha256"]):

@@ -29,6 +29,8 @@ recipient ID는 미리 식별한 exact 대화창과 매핑한다. identity evide
 
 입력 전에 read-only probe로 exact 창 한 개, 빈 초안, 문구 hash와 발신 개수를 확인한다. AXWindows가 노출되지 않으면 입력 전 `not_sent`로 멈춘다. 현재 공개 probe는 retained ref나 focused/main hint를 사용하지 않으므로, hidden-window 상황을 자동으로 해결하는 서비스가 아니다.
 
+화면이 잠긴 경우에는 명시적 `session_screen_locked` 사유로 kmsg를 호출하기 전에 멈춘다. 이때 저장 ref의 STALE_REF나 창 목록 0만 보고 앱의 전송 기능이 영구적으로 없다고 결론 내리지 않는다. 잠금 해제 이후의 실제 앱 동작은 따로 확인해야 한다. 이미 남긴 not_sent 요청을 자동으로 다시 실행하지 않는다.
+
 kmsg에는 `send --background-safe -- <title> <message>`를 argv로 전달한다. shell은 사용하지 않는다. kmsg가 commit 1회를 보고한 경우에만 읽기 전용 결과 확인을 진행한다. AXPress 오류나 kmsg의 비정상 종료도 전송 실패로 단정하지 않는다. 기본 확인 대기는 2초이며 개별 probe의 최대 3초 실행 시간이 더해질 수 있다.
 
 ## 결과 계약

@@ -150,6 +150,17 @@ class VerificationTests(unittest.TestCase):
         self.assertFalse(result["automatic_retry_allowed"])
         self.assertFalse(result["recipient_read_verified"])
 
+    def test_session_state_can_invalidate_an_otherwise_matching_receipt(self):
+        for flags in [{"CGSSessionScreenIsLocked": True}, {"kCGSessionLoginDoneKey": False},
+                      {"kCGSSessionOnConsoleKey": False}, {"CGSSessionScreenIsLocked": "true"}, None]:
+            with self.subTest(flags=flags):
+                after = {**self.after, "session_flags": flags}
+                self.assertEqual(verification.verify(self.before, after)["status"], "unconfirmed")
+        # Previously observed unlocked sessions omitted the lock key.
+        observed = {**self.after, "session_flags": {"kCGSessionLoginDoneKey": True,
+                                                   "kCGSSessionOnConsoleKey": True}}
+        self.assertEqual(verification.verify(self.before, observed)["status"], "confirmed_in_ui")
+
     def test_missing_duplicate_window_or_stale_message_never_passes(self):
         changes = [{"ready": False}, {"exact_window_count": 0}, {"exact_window_count": 2},
                    {"pid": 124}, {"target_title": "Different chat"}, {"message_sha256": "a" * 64},

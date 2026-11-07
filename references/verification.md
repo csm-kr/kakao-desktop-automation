@@ -16,6 +16,8 @@ bootstrap 결과의 `probe`는 특정 열린 대화창만 읽는다. 활성화·
 
 `ready=true`, `exact_window_count=1`, 유일한 빈 입력창, 메시지 목록을 읽었는지 확인한다. 해당 창이 AX에 노출되지 않으면 probe는 오류를 반환하며 창을 복원하지 않는다. 이 상태를 낮은 latency의 성공으로 보고하면 안 된다.
 
+명시적인 화면 잠금은 `session_screen_locked`, 로그인 미완료/console 비활성은 `session_not_interactive`로 앱 AX 조회 전에 멈춘다. `session_flags`에는 읽은 값만 보존한다. 이전 unlocked 관찰에서는 잠금 키 자체가 없었으므로, 키 누락을 명시적 false나 무조건 잠금 해제라고 표현하지 않는다. 전후 비교도 명시적 잠금·비대화형 상태 또는 잘못된 session 값이 포함된 기록을 거부한다. 잠금을 우회하거나 로그인을 대신 수행하지 않는다.
+
 이 공개 probe는 `AXWindows`만 사용한다. background 상태에서 그 배열이 0이면 실제 창의 존재나 발송 결과를 확인하지 못한다. controlled test에 쓰인 별도 focused/main hint observer나 복구 harness는 포함하지 않으며, 그 실험 성공을 이 probe 또는 단일 호출 sender의 통합 성공으로 옮겨 보고하지 않는다.
 
 사용자에게 허가받은 한 번의 sender 호출 뒤 같은 probe로 `after.json`을 만든다. 본문 대신 SHA-256과 동일 문구의 개수만 출력한다.
