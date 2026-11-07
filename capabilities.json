@@ -34,15 +34,18 @@
     "json_sender_adapter": "fake-backend contracts verified; live KakaoTalk single-call validation not performed",
     "information_collection": {
       "implementation": "exact exposed AX text-row tail and local literal keyword/link selection",
-      "live_room_validation": "not_performed",
+      "live_room_validation": "two user-selected community-room text reads observed on KakaoTalk 26.9; no raw conversations included",
       "author_and_message_date": "not_inferred",
       "full_history_and_date_range": "not_implemented",
-      "semantic_summary": "not_implemented",
-      "external_forwarding": "not_connected"
+      "semantic_summary": "agent-authored digest observed; no autonomous model caller implemented",
+      "external_forwarding": "not_connected",
+      "unread_navigation": "exact chat search/open and unread-to-bottom navigation observed; may change foreground/read status",
+      "incremental_capture_wrapper": "mock and saved-capture replay verified; new live wrapper speed not measured; no cross-session cursor",
+      "digest_cardnews": "summary-first HTML/Markdown, image-content reuse plan, lazy local PNGs and portable embedded export verified"
     }
   },
   "package_validation": {
-    "fixture_tests_passed": 51,
+    "fixture_tests_passed": 62,
     "skill_structure_valid": true,
     "foreground_fresh_bootstrap_and_reuse": "passed",
     "both_patches_apply_to_pin": "passed",
@@ -64,6 +67,15 @@
     "current_three_helper_bootstrap_and_reuse": "passed; fixed-source background-experimental release build, probe and collector startup",
     "collector_native_compile_and_help": "passed",
     "collector_locked_session_guard": "live validated; no AX observation or room text returned",
-    "collector_unlocked_room_read": "not_performed"
+    "collector_unlocked_room_read": "observed on two user-selected community rooms; no names, raw text, images or logs shipped",
+    "unread_capture_mock_tests_passed": 4,
+    "cardnews_fixture_tests_passed": 7,
+    "navigator_compile_and_help": "passed; help does not access apps",
+    "incremental_capture_replay": {
+      "same_final_rows": 250,
+      "prior_rows_examined": 912,
+      "incremental_rows_examined": 288,
+      "live_speed_measured": false
+    }
   }
 }

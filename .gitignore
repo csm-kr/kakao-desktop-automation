@@ -14,3 +14,5 @@ artifacts/
 .sender.lock
 *.intent.json
 *.receipt.json
+output/
+generated_images/
